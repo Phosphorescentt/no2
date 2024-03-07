@@ -1,12 +1,7 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{
-    prelude::*,
-    symbols::border,
-    widgets::{block::*, *},
-};
 use std::io;
 
 mod app;
+mod components;
 mod screens;
 mod terminal;
 mod traits;
