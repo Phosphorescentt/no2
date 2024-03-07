@@ -14,7 +14,7 @@ impl HomeState {
     }
 
     fn move_select_next(&mut self) {
-        if self.selected_button == (BUTTONS.len() - 1) as u8 {
+        if self.selected_button == (self.menu_buttons.len() - 1) as u8 {
             return;
         }
         self.selected_button = self.selected_button.saturating_add(1);
