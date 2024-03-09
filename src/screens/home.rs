@@ -14,10 +14,10 @@ enum ButtonAction {
 }
 
 pub struct HomeState {
-    pub selected_button: u8,
-    pub menu_buttons: Vec<crate::components::Button>,
+    selected_button: u8,
+    menu_buttons: Vec<crate::components::Button>,
     // Keys are the button IDs.
-    pub action_map: HashMap<String, ButtonAction>,
+    action_map: HashMap<String, ButtonAction>,
 }
 
 impl HomeState {
@@ -99,11 +99,11 @@ impl FrameRenderer for HomeState {
     fn render_frame(&self, frame: &mut ratatui::prelude::Frame) -> std::io::Result<()> {
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(3), Constraint::Length(3)])
+            .constraints(vec![Constraint::Length(3); self.menu_buttons.len()])
             .split(frame.size());
 
         for (i, menu_button) in self.menu_buttons.iter().enumerate() {
-            let mut paragraph_widget = Paragraph::new(menu_button.text.to_string());
+            let mut paragraph_widget = Paragraph::new(menu_button.text.clone());
 
             match i as u8 == self.selected_button {
                 true => {

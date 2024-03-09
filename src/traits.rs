@@ -14,12 +14,12 @@ pub enum ScreenMessage {
 
 pub trait FrameRenderer {
     fn render_frame(&self, frame: &mut Frame) -> io::Result<()> {
-        todo!()
+        todo!("render_frame not yet implemented!");
     }
 }
 
 pub trait EventHandler {
     fn handle_events(&mut self, event: Event) -> io::Result<ScreenMessage> {
-        todo!()
+        todo!("handle_events not yet implemented!");
     }
 }
