@@ -1,17 +1,14 @@
-use ratatui::style::Color;
-
+// use ratatui::style::Color;
+#[derive(Clone, PartialEq, Eq)]
 pub struct Button {
+    pub id: String,
     pub text: String,
-    pub fg_color: Option<Color>,
-    pub bg_color: Option<Color>,
+    // pub fg_color: Option<Color>,
+    // pub bg_color: Option<Color>,
 }
 
-impl From<String> for Button {
-    fn from(text: String) -> Self {
-        Button {
-            text,
-            fg_color: None,
-            bg_color: None,
-        }
+impl Button {
+    pub fn new(id: String, text: String) -> Self {
+        Button { id, text }
     }
 }

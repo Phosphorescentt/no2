@@ -1,5 +1,5 @@
 use crate::screens;
-use crate::traits::{EventHandler, FrameRenderer};
+use crate::traits::{EventHandler, FrameRenderer, ScreenMessage};
 use crossterm::event::{self, Event, KeyCode};
 use ratatui::Frame;
 use std::io;
@@ -64,15 +64,19 @@ impl App {
             };
         }
 
-        let exit = match &mut self.state.screen {
+        let message = match &mut self.state.screen {
             Screen::Home(home_state) => home_state.handle_events(event),
             Screen::Settings(settings_state) => settings_state.handle_events(event),
             Screen::Game(game_state) => game_state.handle_events(event),
             Screen::End(end_state) => end_state.handle_events(event),
         }?;
 
-        if exit {
-            self.exit = true
+        match message {
+            ScreenMessage::Exit => self.exit = true,
+            ScreenMessage::ChangeScreen(s) => {
+                self.state.screen = s;
+            }
+            _ => {}
         }
 
         Ok(())
