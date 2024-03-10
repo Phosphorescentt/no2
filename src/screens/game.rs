@@ -6,11 +6,21 @@ use ratatui::{
     widgets::Paragraph,
 };
 
-use crate::traits::{EventHandler, FrameRenderer, ScreenMessage};
+use crate::{
+    app::Screen,
+    traits::{EventHandler, FrameRenderer, ScreenMessage},
+};
+
+use super::end::EndState;
 
 #[derive(Clone, Copy)]
 pub struct GameSettings {
     pub size: u8,
+}
+
+enum BoardValidity {
+    Valid,
+    Invalid(u8, u8),
 }
 
 pub struct GameState {
@@ -23,16 +33,31 @@ struct BoardState {
     size: u8,
     // Values generated at the start
     true_values: Vec<Vec<bool>>,
+    row_counts: Vec<u8>,
+    column_counts: Vec<u8>,
     // Values assigned by the player
     assigned_values: Vec<Vec<Option<bool>>>,
     selected_square: (u8, u8),
+    invalid_tile: Option<(u8, u8)>,
 }
 
 impl BoardState {
     fn render(self) -> Paragraph<'static> {
         let mut lines: Vec<Line> = Vec::new();
+        let mut column_counts: String = String::from("  ");
+
+        for n in 0..self.size {
+            column_counts.push_str(self.column_counts[n as usize].to_string().as_str());
+        }
+
+        lines.push(Line::from(column_counts.white()));
+        lines.push(Line::from(" ".white()));
+
         for m in 0..self.size {
             let mut line_characters: Vec<Span<'static>> = Vec::new();
+            line_characters.push(self.row_counts[m as usize].to_string().white());
+            line_characters.push(" ".white());
+
             for n in 0..self.size {
                 let value = self
                     .assigned_values
@@ -60,20 +85,58 @@ impl BoardState {
 
         Paragraph::new(Text::from(lines))
     }
+
+    fn check_assigned(&self) -> BoardValidity {
+        for m in 0..self.size {
+            for n in 0..self.size {
+                let assigned_value = self
+                    .assigned_values
+                    .get(m as usize)
+                    .unwrap()
+                    .get(n as usize)
+                    .unwrap();
+
+                let true_value = self
+                    .true_values
+                    .get(m as usize)
+                    .unwrap()
+                    .get(n as usize)
+                    .unwrap();
+
+                match (assigned_value, true_value) {
+                    (Some(v1), v2) => {
+                        if v1 != v2 {
+                            return BoardValidity::Invalid(m, n);
+                        }
+                    }
+                    (None, _) => return BoardValidity::Invalid(m, n),
+                }
+            }
+        }
+
+        return BoardValidity::Valid;
+    }
 }
 
 impl From<GameSettings> for BoardState {
     fn from(settings: GameSettings) -> Self {
         let mut rng = rand::thread_rng();
         let mut true_values: Vec<Vec<bool>> = Vec::new();
+        let mut row_counts: Vec<u8> = vec![0; settings.size as usize];
+        let mut column_counts: Vec<u8> = vec![0; settings.size as usize];
         let mut assigned_values: Vec<Vec<Option<bool>>> = Vec::new();
-        for _m in 0..settings.size {
+        for m in 0..settings.size {
             let mut true_current_row: Vec<bool> = Vec::new();
             let mut assigned_current_row: Vec<Option<bool>> = Vec::new();
-            for _n in 0..settings.size {
+            for n in 0..settings.size {
                 let b: bool = rng.gen();
                 true_current_row.push(b);
                 assigned_current_row.push(None);
+
+                if b {
+                    row_counts[m as usize] += 1;
+                    column_counts[n as usize] += 1;
+                }
             }
             true_values.push(true_current_row);
             assigned_values.push(assigned_current_row);
@@ -82,8 +145,11 @@ impl From<GameSettings> for BoardState {
         BoardState {
             size: settings.size,
             true_values,
+            row_counts,
+            column_counts,
             assigned_values,
             selected_square: (0, 0),
+            invalid_tile: None,
         }
     }
 }
@@ -148,6 +214,18 @@ impl GameState {
         self.board_state.selected_square = (selected_square.0, selected_square.1.saturating_add(1));
         Ok(ScreenMessage::Noop)
     }
+
+    fn check_assigned(&mut self) -> std::io::Result<ScreenMessage> {
+        let solved = self.board_state.check_assigned();
+
+        match solved {
+            BoardValidity::Valid => Ok(ScreenMessage::ChangeScreen(Screen::End(EndState))),
+            BoardValidity::Invalid(m, n) => {
+                self.board_state.invalid_tile = Some((m, n));
+                Ok(ScreenMessage::Noop)
+            }
+        }
+    }
 }
 
 impl Default for GameState {
@@ -185,6 +263,7 @@ impl EventHandler for GameState {
                 KeyCode::Down => self.move_selected_down(),
                 KeyCode::Left => self.move_selected_left(),
                 KeyCode::Right => self.move_selected_right(),
+                KeyCode::Char('c') => self.check_assigned(),
                 _ => Ok(ScreenMessage::Noop),
             };
         }
@@ -196,11 +275,14 @@ impl FrameRenderer for GameState {
     fn render_frame(&self, frame: &mut ratatui::prelude::Frame) -> std::io::Result<()> {
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(3), Constraint::Percentage(50)])
+            .constraints(vec![Constraint::Percentage(50), Constraint::Length(2)])
             .split(frame.size());
 
-        frame.render_widget(Paragraph::new(self.settings.size.to_string()), layout[0]);
-        frame.render_widget(self.board_state.clone().render(), layout[1]);
+        frame.render_widget(self.board_state.clone().render(), layout[0]);
+        frame.render_widget(
+            Paragraph::new(format!("{:?}", self.board_state.invalid_tile).to_string()),
+            layout[1],
+        );
 
         Ok(())
     }
