@@ -57,6 +57,8 @@ impl App {
         let event = event::read()?;
 
         // Always catch 'q' as quit regardless of screen.
+        // TODO: make this create a box in the middle of the screen confirming if the user wants to
+        // quit or not.
         if let Event::Key(key) = event {
             if key.code == KeyCode::Char('q') {
                 self.exit = true;
