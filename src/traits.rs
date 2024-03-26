@@ -1,10 +1,8 @@
-use crossterm::event::{Event, KeyEvent};
+use crossterm::event::Event;
 use ratatui::Frame;
 use std::io;
 
 use crate::app::Screen;
-
-pub type Exit = bool;
 
 pub enum ScreenMessage {
     Exit,
