@@ -21,12 +21,12 @@ pub struct HomeState {
 }
 
 impl HomeState {
-    fn move_prev_button(&mut self) -> std::io::Result<ScreenMessage> {
+    fn move_prev_button(&mut self) -> color_eyre::Result<ScreenMessage> {
         self.selected_button = self.selected_button.saturating_sub(1);
         Ok(ScreenMessage::Noop)
     }
 
-    fn move_next_button(&mut self) -> std::io::Result<ScreenMessage> {
+    fn move_next_button(&mut self) -> color_eyre::Result<ScreenMessage> {
         if self.selected_button == (self.menu_buttons.len() - 1) as u8 {
             return Ok(ScreenMessage::Noop);
         }
@@ -35,7 +35,7 @@ impl HomeState {
         Ok(ScreenMessage::Noop)
     }
 
-    fn select_button(&mut self) -> std::io::Result<ScreenMessage> {
+    fn select_button(&mut self) -> color_eyre::Result<ScreenMessage> {
         // TODO: remove all these unwraps
         let action = self
             .action_map
@@ -77,7 +77,7 @@ impl Default for HomeState {
 }
 
 impl EventHandler for HomeState {
-    fn handle_events(&mut self, event: Event) -> std::io::Result<ScreenMessage> {
+    fn handle_events(&mut self, event: Event) -> color_eyre::Result<ScreenMessage> {
         if let Event::Key(key) = event {
             if key.kind == event::KeyEventKind::Release {
                 return Ok(ScreenMessage::Noop);
@@ -96,7 +96,7 @@ impl EventHandler for HomeState {
 }
 
 impl FrameRenderer for HomeState {
-    fn render_frame(&self, frame: &mut ratatui::prelude::Frame) -> std::io::Result<()> {
+    fn render_frame(&self, frame: &mut ratatui::prelude::Frame) -> color_eyre::Result<()> {
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![Constraint::Length(3); self.menu_buttons.len()])

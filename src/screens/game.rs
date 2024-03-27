@@ -211,7 +211,7 @@ impl From<GameSettings> for BoardState {
 }
 
 impl GameState {
-    fn toggle_selected_square(&mut self) -> std::io::Result<ScreenMessage> {
+    fn toggle_selected_square(&mut self) -> color_eyre::Result<ScreenMessage> {
         let selected_square = self.board_state.selected_square;
 
         let current_state = self
@@ -241,13 +241,13 @@ impl GameState {
         Ok(ScreenMessage::Noop)
     }
 
-    fn move_selected_up(&mut self) -> std::io::Result<ScreenMessage> {
+    fn move_selected_up(&mut self) -> color_eyre::Result<ScreenMessage> {
         let selected_square = self.board_state.selected_square;
         self.board_state.selected_square = (selected_square.0.saturating_sub(1), selected_square.1);
         Ok(ScreenMessage::Noop)
     }
 
-    fn move_selected_down(&mut self) -> std::io::Result<ScreenMessage> {
+    fn move_selected_down(&mut self) -> color_eyre::Result<ScreenMessage> {
         let selected_square = self.board_state.selected_square;
         if selected_square.0 == (self.board_state.size - 1) as u8 {
             return Ok(ScreenMessage::Noop);
@@ -256,13 +256,13 @@ impl GameState {
         Ok(ScreenMessage::Noop)
     }
 
-    fn move_selected_left(&mut self) -> std::io::Result<ScreenMessage> {
+    fn move_selected_left(&mut self) -> color_eyre::Result<ScreenMessage> {
         let selected_square = self.board_state.selected_square;
         self.board_state.selected_square = (selected_square.0, selected_square.1.saturating_sub(1));
         Ok(ScreenMessage::Noop)
     }
 
-    fn move_selected_right(&mut self) -> std::io::Result<ScreenMessage> {
+    fn move_selected_right(&mut self) -> color_eyre::Result<ScreenMessage> {
         let selected_square = self.board_state.selected_square;
         if selected_square.1 == (self.board_state.size - 1) as u8 {
             return Ok(ScreenMessage::Noop);
@@ -271,7 +271,7 @@ impl GameState {
         Ok(ScreenMessage::Noop)
     }
 
-    fn check_assigned(&mut self) -> std::io::Result<ScreenMessage> {
+    fn check_assigned(&mut self) -> color_eyre::Result<ScreenMessage> {
         let solved = self.board_state.check_assigned();
 
         match solved {
@@ -307,7 +307,7 @@ impl EventHandler for GameState {
     fn handle_events(
         &mut self,
         event: crossterm::event::Event,
-    ) -> std::io::Result<crate::traits::ScreenMessage> {
+    ) -> color_eyre::Result<crate::traits::ScreenMessage> {
         if let Event::Key(key) = event {
             if key.kind == event::KeyEventKind::Release {
                 return Ok(ScreenMessage::Noop);
@@ -328,7 +328,7 @@ impl EventHandler for GameState {
 }
 
 impl FrameRenderer for GameState {
-    fn render_frame(&self, frame: &mut ratatui::prelude::Frame) -> std::io::Result<()> {
+    fn render_frame(&self, frame: &mut ratatui::prelude::Frame) -> color_eyre::Result<()> {
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![
