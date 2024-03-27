@@ -27,7 +27,7 @@ pub struct SettingsState {
     menu_buttons: Vec<crate::components::Button>,
     // Keys are the button IDs.
     action_map: HashMap<String, ButtonAction>,
-    // TODO: move to system where buttongs will mutate this variable and then when we hit start we
+    // TODO: move to system where buttons will mutate this variable and then when we hit start we
     // use this variable to initialise the game state.
     // settings: GameSettings,
 }

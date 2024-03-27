@@ -1,5 +1,3 @@
-use std::io;
-
 mod app;
 mod components;
 mod error_handling;

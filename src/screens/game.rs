@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crossterm::event::{self, Event, KeyCode};
 use rand::Rng;
 use ratatui::{
@@ -23,16 +25,17 @@ enum BoardValidity {
     Invalid(u8, u8),
 }
 
+#[derive(Clone)]
 pub struct GameState {
     pub settings: GameSettings,
-    board_state: BoardState,
+    pub board_state: BoardState,
 }
 
 #[derive(Clone)]
-struct BoardState {
+pub struct BoardState {
     size: u8,
     // Values generated at the start
-    true_values: Vec<Vec<bool>>,
+    pub true_values: Vec<Vec<bool>>,
     row_counts: Vec<Vec<u8>>,
     column_counts: Vec<Vec<u8>>,
     // Values assigned by the player
@@ -54,8 +57,6 @@ impl BoardState {
             .iter()
             .map(|x| max_len_column_counts - x.len())
             .collect();
-        println!("max_len_column_counts: {}", max_len_column_counts);
-        println!("column_paddings: {:?}", column_paddings);
         for j in 0..max_len_column_counts {
             let mut column_counts_line: String =
                 String::from(" ".repeat((max_len_row_counts * 2) as usize));
@@ -173,8 +174,8 @@ impl From<GameSettings> for BoardState {
                 true_current_row.push(b);
 
                 // Swap comments here for debugging purposes.
-                assigned_current_row.push(Some(b));
-                // assigned_current_row.push(None);
+                // assigned_current_row.push(Some(b));
+                assigned_current_row.push(None);
 
                 if b {
                     if reset_row_counts {
@@ -275,7 +276,9 @@ impl GameState {
         let solved = self.board_state.check_assigned();
 
         match solved {
-            BoardValidity::Valid => Ok(ScreenMessage::ChangeScreen(Screen::End(EndState))),
+            BoardValidity::Valid => Ok(ScreenMessage::ChangeScreen(Screen::End(EndState::from(
+                self.clone(),
+            )))),
             BoardValidity::Invalid(m, n) => {
                 self.board_state.invalid_tile = Some((m, n));
                 Ok(ScreenMessage::Noop)
@@ -331,28 +334,13 @@ impl FrameRenderer for GameState {
     fn render_frame(&self, frame: &mut ratatui::prelude::Frame) -> color_eyre::Result<()> {
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(vec![
-                Constraint::Percentage(20),
-                Constraint::Length(2),
-                Constraint::Length(2),
-                Constraint::Length(2),
-            ])
+            .constraints(vec![Constraint::Percentage(20), Constraint::Length(2)])
             .split(frame.size());
 
         frame.render_widget(self.board_state.clone().render(), layout[0]);
         frame.render_widget(
             Paragraph::new(format!("{:?}", self.board_state.invalid_tile).to_string()),
             layout[1],
-        );
-        frame.render_widget(
-            Paragraph::new(format!("row_counts: {:?}", self.board_state.row_counts).to_string()),
-            layout[2],
-        );
-        frame.render_widget(
-            Paragraph::new(
-                format!("column_counts: {:?}", self.board_state.column_counts).to_string(),
-            ),
-            layout[3],
         );
 
         Ok(())
